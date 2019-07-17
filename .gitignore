@@ -1,0 +1,10 @@
+
+\.vscode/
+
+hitscorevisualizer/obj/local/armeabi-v7a/
+
+temp/obj/local/armeabi-v7a/
+
+obj/*
+
+*/obj/
