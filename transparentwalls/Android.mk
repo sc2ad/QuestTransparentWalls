@@ -26,7 +26,8 @@ LOCAL_MODULE := hook
 
 include $(CLEAR_VARS)
 LOCAL_LDLIBS := -llog
+LOCAL_CFLAGS    := -DMOD_ID='"TransparentWalls"' -DVERSION='"0.0.0.12"'
 LOCAL_MODULE    := transparentwalls
-LOCAL_SRC_FILES := main.c ../beatsaber-hook/shared/utils/utils.c ../beatsaber-hook/shared/inline-hook/inlineHook.c ../beatsaber-hook/shared/inline-hook/relocate.c
+LOCAL_SRC_FILES := main.cpp ../beatsaber-hook/shared/utils/utils.cpp ../beatsaber-hook/shared/inline-hook/inlineHook.c ../beatsaber-hook/shared/inline-hook/relocate.c
 #LOCAL_STATIC_LIBRARIES := libhook
 include $(BUILD_SHARED_LIBRARY)

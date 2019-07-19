@@ -13,8 +13,7 @@
 #include "../beatsaber-hook/shared/inline-hook/inlineHook.h"
 #include "../beatsaber-hook/shared/utils/utils.h"
 
-#undef log
-#define log(...) __android_log_print(ANDROID_LOG_INFO, "QuestHook", "[TransparentWalls v0.0.0.12] " __VA_ARGS__)
+using namespace std;
 
 #define LIV_ctor_offset 0x136E7BC
 #define StretchableCube_Awake_offset 0x12F05D4
@@ -32,6 +31,7 @@
 #define MoveBackLayer 27
 
 #define CameraMaskMaxCount 3
+
 
 void printLayer(unsigned layer) {
 	unsigned i;
@@ -69,7 +69,7 @@ MAKE_HOOK(LIV_ctor, LIV_ctor_offset, void, void* self) {
     void** layerFieldOffset = (void**)(self) + 0x18;
     log("Original LIV LayerMask Pointer: %i", (int)layerFieldOffset);
     log("Attempting to get value of LIV LayerMask...");
-    int (*get_value_layermask)(void*) = (void*)getRealOffset(LayerMask_get_value_offset);
+    auto get_value_layermask = reinterpret_cast<function_ptr_t<int, void*>>(getRealOffset(LayerMask_get_value_offset));
     int originalValue = get_value_layermask(*layerFieldOffset);
     // log("Original LIV layer value: %i", originalValue);
     printLayer(originalValue);
@@ -80,7 +80,7 @@ MAKE_HOOK(LIV_ctor, LIV_ctor_offset, void, void* self) {
     originalValue &= ~(1 << MoveBackLayer);
     // log("Modified LIV layer: %i", originalValue);
     printLayer(originalValue);
-    void (*set_value_layermask)(void*, int) = (void*)getRealOffset(LayerMask_set_value_offset);
+    auto set_value_layermask = reinterpret_cast<function_ptr_t<void, void*, int>>(getRealOffset(LayerMask_set_value_offset));
     set_value_layermask(*layerFieldOffset, originalValue);
     log("Completed LIV.ctor!");
 }
@@ -97,10 +97,10 @@ void layerWall(void* self) {
     // Camera culling mask
     if (cameraSet < CameraMaskMaxCount) {
         log("Attemping to get Camera...");
-        void* (*Camera_get_main)(void) = (void*)getRealOffset(Camera_get_main_offset);
+        auto Camera_get_main = reinterpret_cast<function_ptr_t<void*>>(getRealOffset(Camera_get_main_offset));
         void* cam = Camera_get_main();
         log("Attempting to get old culling mask...");
-        int (*Camera_get_cullingMask)(void*) = (void*)getRealOffset(Camera_get_cullingMask_offset);
+        auto Camera_get_cullingMask = reinterpret_cast<function_ptr_t<int, void*>>(getRealOffset(Camera_get_cullingMask_offset));
         int mask = Camera_get_cullingMask(cam);
         printLayer(mask);
         log("Attempting to transform Camera culling mask to:");
@@ -109,19 +109,19 @@ void layerWall(void* self) {
 
         printLayer(mask);
         log("Attempting to call Camera.set_cullingMask...");
-        void (*Camera_set_cullingMask)(void*, int) = (void*)getRealOffset(Camera_set_cullingMask_offset);
+        auto Camera_set_cullingMask = reinterpret_cast<function_ptr_t<void, void*, int>>(getRealOffset(Camera_set_cullingMask_offset));
         Camera_set_cullingMask(cam, mask);
         cameraSet++;
     }
     // Layer of Wall
     log("Attempting to get GameObject pointer...");
-    void* (*get_go)(void*) = (void*)getRealOffset(Component_get_gameObject_offset);
+    auto get_go = reinterpret_cast<function_ptr_t<void*, void*>>(getRealOffset(Component_get_gameObject_offset));
     void* go = (*get_go)(self);
     log("Attempting to get old GameObject layer...");
-    int (*get_layer)(void*) = (void*)getRealOffset(Gameobject_get_layer_offset);
+    auto get_layer = reinterpret_cast<function_ptr_t<int, void*>>(getRealOffset(Gameobject_get_layer_offset));
     int oldLayer = get_layer(go);
     log("Attempting to set layer to %i from %i...", WallLayer, oldLayer);
-    void (*set_layer)(void*, int) = (void*)getRealOffset(Gameobject_set_layer_offset);
+    auto set_layer = reinterpret_cast<function_ptr_t<void, void*, int>>(getRealOffset(Gameobject_set_layer_offset));
     set_layer(go, WallLayer);
 }
 
